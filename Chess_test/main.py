@@ -15,6 +15,7 @@ from stockfish import Stockfish
 # print(stockfish.get_best_move()) #This gives the best move for the current board setup
 
 chessBoard = chess.Board()
+movesList = []
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -33,7 +34,16 @@ class MainWindow(QWidget):
 
     def playMove(self, inputText):
         print(inputText)
+        movesList.append(inputText)
         chessBoard.push_san(inputText)
+        if chessBoard.is_checkmate():
+            print('checkmate')
+        if chessBoard.is_stalemate():
+            print('stalemate')
+        if chessBoard.is_check():
+            print('check')
+        # if chessBoard.is_game_over():
+            # print(chessBoard.result())
         self.updateWindow()
 
 class Terminal(QRunnable):
