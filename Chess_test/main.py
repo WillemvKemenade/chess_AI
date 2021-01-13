@@ -54,24 +54,10 @@ class Terminal(QRunnable):
 
     def runGame(self):
         while self.keepPlaying is True:
-            checkmate, draw = self.UUAIPlays()
-
-            if checkmate:
-                print("WHITE WINS")
-                self.keepPlaying = False
-            elif draw:
-                print("IT IS A DRAW")
-                self.keepPlaying = False
-
+            self.keepPlaying = self.UUAIPlays()
 
             if self.keepPlaying is True:
-                checkmate, draw = self.StockfishPlays()
-                if checkmate:
-                    print("BLACK WINS")
-                    self.keepPlaying = False
-                elif draw:
-                    print("IT IS A DRAW")
-                    self.keepPlaying = False
+                self.keepPlaying = self.StockfishPlays()
 
     def UUAIPlays(self):
         # First we play(WHITE)
@@ -86,7 +72,7 @@ class Terminal(QRunnable):
                 print("Illegal move try again")
 
         self.chessWindow.playMove(playerInput, "UUAI")
-        return self.endOfGameCheck()
+        return self.endOfGameCheck("WHITE")
 
     def StockfishPlays(self):
         # Then the bot plays(BLACK)
@@ -97,15 +83,17 @@ class Terminal(QRunnable):
             bestMove = stockfish.get_best_move()
 
         self.chessWindow.playMove(bestMove, "Stockfish")
-        return self.endOfGameCheck()
+        return self.endOfGameCheck("BLACK")
 
-    def endOfGameCheck(self):
+    def endOfGameCheck(self, player):
         if chessBoard.is_checkmate():
-            return True, False
+            print(player, "WINS!")
+            return False
         elif chessBoard.is_insufficient_material():
-            return False, True
+            print("IT IS A DRAW")
+            return False
         else:
-            return False, False
+            return True
 
 if __name__ == "__main__":
     app = QApplication([])
