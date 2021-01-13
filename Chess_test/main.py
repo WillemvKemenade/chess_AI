@@ -7,15 +7,15 @@ from PyQt5.QtCore import *
 
 from stockfish import Stockfish
 
-# stockfish = Stockfish("stockfish_20090216_x64_bmi2.exe")
-# stockfish.set_skill_level(20) #this goes from 0 to 20
+stockfish = Stockfish("stockfish_20090216_x64_bmi2.exe")
+stockfish.set_skill_level(20) #this goes from 0 to 20
 #
 # stockfish.set_position(["e2e4", "e7e6", "f2f4", "f8c5"]) #this sets all the positions that have been played/ make sure to put in the entire list not piece by piece
 # print(stockfish.get_board_visual()) #prints out the board but we probably don't need this
 # print(stockfish.get_best_move()) #This gives the best move for the current board setup
 
 chessBoard = chess.Board()
-movesList = []
+stockfishMovesList = []
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -32,18 +32,14 @@ class MainWindow(QWidget):
         self.chessboardSvg = chess.svg.board(chessBoard).encode("UTF-8")
         self.widgetSvg.load(self.chessboardSvg)
 
-    def playMove(self, inputText):
-        print(inputText)
-        movesList.append(inputText)
-        chessBoard.push_san(inputText)
-        if chessBoard.is_checkmate():
-            print('checkmate')
-        if chessBoard.is_stalemate():
-            print('stalemate')
-        if chessBoard.is_check():
-            print('check')
-        # if chessBoard.is_game_over():
-            # print(chessBoard.result())
+    def playMove(self, inputText, player):
+        if player == "UUAI":
+            stockfishMovesList.append(str(chessBoard.parse_san(inputText)))
+            chessBoard.push_san(inputText)
+        else:
+            stockfishMovesList.append(inputText)
+            chessBoard.push(chess.Move.from_uci(inputText))
+
         self.updateWindow()
 
 class Terminal(QRunnable):
@@ -53,8 +49,38 @@ class Terminal(QRunnable):
         self.chessWindow = window
 
     def run(self):
-        while True:
-            self.chessWindow.playMove(input())
+        while chessBoard.is_checkmate() is False:
+            while chessBoard.is_insufficient_material() is False: #this means it's a draw
+                #First we play
+                legalMove = False
+
+                while legalMove is False:
+                    try:
+                        playerInput = input()
+                        parsed = chessBoard.parse_san(playerInput)
+                        legalMove = True
+                    except:
+                        print("Illegal move try again")
+
+                self.chessWindow.playMove(playerInput, "UUAI")
+
+                #Then the bot plays
+                stockfish.set_position(stockfishMovesList)
+                bestMove = stockfish.get_best_move()
+
+                while chess.Move.from_uci(stockfish.get_best_move()) in chessBoard.legal_moves is False:
+                    bestMove = stockfish.get_best_move()
+
+                self.chessWindow.playMove(stockfish.get_best_move(), "Stockfish")
+
+        if chessBoard.is_checkmate():
+            print('checkmate')
+        if chessBoard.is_insufficient_material():
+            print('draw')
+        #if chessBoard.is_check():
+        #    print('check')
+        # if chessBoard.is_game_over():
+        #     print(chessBoard.result())
 
 if __name__ == "__main__":
     app = QApplication([])
