@@ -9,10 +9,6 @@ from stockfish import Stockfish
 
 stockfish = Stockfish("stockfish_20090216_x64_bmi2.exe")
 stockfish.set_skill_level(20) #this goes from 0 to 20
-#
-# stockfish.set_position(["e2e4", "e7e6", "f2f4", "f8c5"]) #this sets all the positions that have been played/ make sure to put in the entire list not piece by piece
-# print(stockfish.get_board_visual()) #prints out the board but we probably don't need this
-# print(stockfish.get_best_move()) #This gives the best move for the current board setup
 
 chessBoard = chess.Board()
 stockfishMovesList = []
@@ -44,43 +40,72 @@ class MainWindow(QWidget):
 
 class Terminal(QRunnable):
     chessWindow = None
+    keepPlaying = None
+    textDisplayed = None
+
     def __init__(self, window):
         super().__init__()
         self.chessWindow = window
+        self.keepPlaying = True
+        self.textDisplayed = False
 
     def run(self):
-        while chessBoard.is_checkmate() is False:
-            while chessBoard.is_insufficient_material() is False: #this means it's a draw
-                #First we play
-                legalMove = False
+        self.runGame()
 
-                while legalMove is False:
-                    try:
-                        playerInput = input()
-                        parsed = chessBoard.parse_san(playerInput)
-                        legalMove = True
-                    except:
-                        print("Illegal move try again")
+    def runGame(self):
+        while self.keepPlaying is True:
+            checkmate, draw = self.UUAIPlays()
 
-                self.chessWindow.playMove(playerInput, "UUAI")
+            if checkmate:
+                print("WHITE WINS")
+                self.keepPlaying = False
+            elif draw:
+                print("IT IS A DRAW")
+                self.keepPlaying = False
 
-                #Then the bot plays
-                stockfish.set_position(stockfishMovesList)
-                bestMove = stockfish.get_best_move()
 
-                while chess.Move.from_uci(stockfish.get_best_move()) in chessBoard.legal_moves is False:
-                    bestMove = stockfish.get_best_move()
+            if self.keepPlaying is True:
+                checkmate, draw = self.StockfishPlays()
+                if checkmate:
+                    print("BLACK WINS")
+                    self.keepPlaying = False
+                elif draw:
+                    print("IT IS A DRAW")
+                    self.keepPlaying = False
 
-                self.chessWindow.playMove(stockfish.get_best_move(), "Stockfish")
+    def UUAIPlays(self):
+        # First we play(WHITE)
+        legalMove = False
 
+        while legalMove is False:
+            try:
+                playerInput = input()
+                chessBoard.parse_san(playerInput)
+                legalMove = True
+            except:
+                print("Illegal move try again")
+
+        self.chessWindow.playMove(playerInput, "UUAI")
+        return self.endOfGameCheck()
+
+    def StockfishPlays(self):
+        # Then the bot plays(BLACK)
+        stockfish.set_position(stockfishMovesList)
+        bestMove = stockfish.get_best_move()
+
+        while chess.Move.from_uci(bestMove) in chessBoard.legal_moves is False:
+            bestMove = stockfish.get_best_move()
+
+        self.chessWindow.playMove(bestMove, "Stockfish")
+        return self.endOfGameCheck()
+
+    def endOfGameCheck(self):
         if chessBoard.is_checkmate():
-            print('checkmate')
-        if chessBoard.is_insufficient_material():
-            print('draw')
-        #if chessBoard.is_check():
-        #    print('check')
-        # if chessBoard.is_game_over():
-        #     print(chessBoard.result())
+            return True, False
+        elif chessBoard.is_insufficient_material():
+            return False, True
+        else:
+            return False, False
 
 if __name__ == "__main__":
     app = QApplication([])
