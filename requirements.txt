@@ -1,0 +1,6 @@
+scikit-learn
+chess
+keras
+pandas
+h5py
+PyQt5

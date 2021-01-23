@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from input_board import convert_position_prediction, make_clean_board, move_from
 
 mode = 'moved_from' # or 'moved_in'
+num_val = 100000
 
 
 def generator(inputs, outputs, batch_size, training_examples=0, validation_examples=0):
@@ -76,11 +77,11 @@ callbacks = [tensorboard, checkpoint]
 
 h5f = h5py.File('testdata.h5', 'r')
 
-X = h5f['input_position'][:-100000]
-Y = h5f[mode][:-100000]
+X = h5f['input_position'][:-num_val]
+Y = h5f[mode][:-num_val]
 
-X_val = h5f['input_position'][-100000:]
-Y_val = h5f[mode][-100000:]
+X_val = h5f['input_position'][-num_val:]
+Y_val = h5f[mode][-num_val:]
 
 num_training_examples = len(X)
 num_val_examples = len(X_val)
