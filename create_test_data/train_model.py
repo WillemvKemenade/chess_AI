@@ -1,16 +1,17 @@
 from time import time
 import h5py
 import keras
+import os
 import numpy as np
 from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras.layers import Activation, Conv2D, Dense, Flatten
+from keras.layers import Activation, Conv2D, Dense, Flatten, LSTM
 from keras.models import Sequential, model_from_json
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
 from input_board import convert_position_prediction, make_clean_board, move_from
 
-mode = 'moved_from' # or 'moved_in'
+mode = 'moved_from' # or 'moved_to'
 num_val = 100000
 
 
@@ -48,6 +49,8 @@ img_rows, img_cols = 8, 8
 input_shape = (img_rows, img_cols, 12)
 
 model = Sequential()
+model.add(LSTM(batch_size, input_shape)),
+model.add(Activation('relu')),
 model.add(Conv2D(128, kernel_size=(2, 2),
                  input_shape=input_shape))
 model.add(Activation('relu'))
@@ -69,13 +72,13 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=Adam(),
               metrics=['accuracy'])
 
-tensorboard = TensorBoard(log_dir='/tmp/keras_logs/ChessAI/moved_from')
+tensorboard = TensorBoard(log_dir=f'/tmp/keras_logs/ChessAI/{mode}')
 filepath = f'{mode}_model.h5'
 checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1,
                              save_best_only=True, mode='max')
 callbacks = [tensorboard, checkpoint]
 
-h5f = h5py.File('testdata.h5', 'r')
+h5f = h5py.File('traintestdata.h5', 'r')
 
 X = h5f['input_position'][:-num_val]
 Y = h5f[mode][:-num_val]
@@ -91,7 +94,7 @@ print(f'Number of validation examples: {num_val_examples}')
 
 
 training_batch_gen = generator(X, Y, batch_size, training_examples=num_training_examples)
-validation_batch_gen = generator(X, Y, batch_size, validation_examples=num_val_examples)
+validation_batch_gen = generator(X_val, Y_val, batch_size, validation_examples=num_val_examples)
 
 
 if __name__ == '__main__':
