@@ -4,7 +4,7 @@ import keras
 import os
 import numpy as np
 from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras.layers import Activation, Conv2D, Dense, Flatten, LSTM
+from keras.layers import Activation, Conv2D, Dense, Flatten, LSTM, Dropout
 from keras.models import Sequential, model_from_json
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
@@ -42,15 +42,13 @@ def generator(inputs, outputs, batch_size, training_examples=0, validation_examp
 stime = time()
 batch_size = 128
 num_classes = 64
-epochs = 30
+epochs = 1
 
 # input image dimensions
 img_rows, img_cols = 8, 8
 input_shape = (img_rows, img_cols, 12)
 
 model = Sequential()
-# model.add(LSTM(batch_size, input_shape)),
-# model.add(Activation('relu')),
 model.add(Conv2D(128, kernel_size=(2, 2),
                  input_shape=input_shape))
 model.add(Activation('relu'))
@@ -109,7 +107,10 @@ if __name__ == '__main__':
                         validation_steps=(num_val_examples // batch_size),
                         workers=16,
                         max_queue_size=32)
-
+    model_json = model.to_json()
+    with open(f"{mode}_model.json", "w") as json_file:
+        json_file.write(model_json)
+    model.save_weights(f"{mode}_weights.h5")
     X_val = X_val.reshape(X_val.shape[0], 8, 8, 12)
     score = model.evaluate(X_val, Y_val, verbose=0)
     print('Test loss:', score[0])
