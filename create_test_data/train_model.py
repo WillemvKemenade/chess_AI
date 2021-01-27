@@ -49,8 +49,8 @@ img_rows, img_cols = 8, 8
 input_shape = (img_rows, img_cols, 12)
 
 model = Sequential()
-model.add(LSTM(batch_size, input_shape)),
-model.add(Activation('relu')),
+# model.add(LSTM(batch_size, input_shape)),
+# model.add(Activation('relu')),
 model.add(Conv2D(128, kernel_size=(2, 2),
                  input_shape=input_shape))
 model.add(Activation('relu'))
