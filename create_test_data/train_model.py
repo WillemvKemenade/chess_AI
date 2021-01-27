@@ -110,6 +110,7 @@ if __name__ == '__main__':
                         workers=16,
                         max_queue_size=32)
 
+    X_val = X_val.reshape(X_val.shape[0], 8, 8, 12)
     score = model.evaluate(X_val, Y_val, verbose=0)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
