@@ -1,11 +1,12 @@
 from time import time
 import h5py
 import keras
+from keras import applications
 import os
 import numpy as np
 from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras.layers import Activation, Conv2D, Dense, Flatten, LSTM, Dropout
-from keras.models import Sequential, model_from_json
+from keras.layers import Activation, Conv2D, Dense, Flatten, Dropout, TimeDistributed, MaxPooling2D, GlobalAveragePooling2D
+from keras.models import Sequential, model_from_json, Model
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
@@ -42,29 +43,31 @@ def generator(inputs, outputs, batch_size, training_examples=0, validation_examp
 stime = time()
 batch_size = 128
 num_classes = 64
-epochs = 1
+epochs = 30
+
 
 # input image dimensions
 img_rows, img_cols = 8, 8
 input_shape = (img_rows, img_cols, 12)
 
+h5f = h5py.File('traintestdata.h5', 'r')
+X = h5f['input_position'][:-num_val]
+
 model = Sequential()
 model.add(Conv2D(128, kernel_size=(2, 2),
                  input_shape=input_shape))
 model.add(Activation('relu'))
-
+model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Conv2D(128, kernel_size=(2, 2)))
 model.add(Activation('relu'))
-
+model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-
 model.add(Dense(1024))
 model.add(Activation('relu'))
-
 model.add(Dense(1024))
 model.add(Activation('relu'))
-
 model.add(Dense(num_classes, activation='softmax'))
+
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=Adam(),
