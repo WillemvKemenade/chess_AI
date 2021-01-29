@@ -15,7 +15,7 @@ num_val = 100000
 stime = time()
 batch_size = 128
 num_classes = 64
-epochs = 1
+epochs = 30
 
 
 # input image dimensions
