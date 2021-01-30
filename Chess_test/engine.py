@@ -171,12 +171,11 @@ class Engine():
         else:
             sdepth = 1
 
-        if (self.last_turn != self.side or
-                self.first_move is True or self.move_recieved == 'None'):
+        if (self.last_turn == self.side or self.first_move is True or self.move_recieved == 'None'):
             result = self.minimax(Node(board=self.board),
                                   depth=sdepth, player=self.side,
                                   alpha=-1*infinity, beta=infinity)
-            print('result:', result)
+            # print('result:', result)
             self.uci_move = result[1]
             pick_from = str(self.uci_move)[0:2].upper()
             pick_to = str(self.uci_move)[2:4].upper()
@@ -189,12 +188,12 @@ class Engine():
             self.board.push(self.uci_move)
 
         output_data['position'] = self.board.fen()
-        print('-----------------------------')
-        print('Output Data: ', output_data)
-        print('Best score: ', result[0])
-        print('NN prediction: ', result[2])
-        print('-----------------------------')
-        return output_data
+        # print('-----------------------------')
+        # print('Output Data: ', output_data)
+        # print('Best score: ', result[0])
+        # print('NN prediction: ', result[2])
+        # print('-----------------------------')
+        return result[2] #output_data
 
 
 class Node():
@@ -300,9 +299,9 @@ class Node():
         material_scores = self.get_material_scores(moves_ordered)
         total_scores = [p_score + m_score for p_score, m_score in
                         zip(prediction_scores, material_scores)]
-        print(([[move, score] for score, move in
-                sorted(zip(total_scores, moves_ordered),
-                       key=lambda x: x[0], reverse=True)]))
+        # print(([[move, score] for score, move in
+        #         sorted(zip(total_scores, moves_ordered),
+        #                key=lambda x: x[0], reverse=True)]))
         return ([[move, score] for score, move in
                 sorted(zip(total_scores, moves_ordered),
                        key=lambda x: x[0], reverse=True)])
@@ -373,11 +372,11 @@ moved_from_weights = os.path.join(model_folder, 'moved_from_weights.h5')
 moved_to_file = os.path.join(model_folder, 'moved_to_model.json')
 moved_to_weights = os.path.join(model_folder, 'moved_to_weights.h5')
 
-with open(moved_from_file, 'r') as moved_from_json:
+with open('D:\\Documenten\\Universiteit Utrecht\\Period 2\\Pattern recognition\\Project\\play_chess\\chess_AI\\models\\moved_from_model.json', 'r') as moved_from_json:
     move_from_model = model_from_json(moved_from_json.read())
 
-with open(moved_to_file, 'r') as moved_to_json:
+with open('D:\\Documenten\\Universiteit Utrecht\\Period 2\\Pattern recognition\\Project\\play_chess\\chess_AI\\models\\moved_to_model.json', 'r') as moved_to_json:
     move_to_model = model_from_json(moved_to_json.read())
 
-move_from_model.load_weights(moved_from_weights)
-move_to_model.load_weights(moved_to_weights)
+move_from_model.load_weights('D:\\Documenten\\Universiteit Utrecht\\Period 2\\Pattern recognition\\Project\\play_chess\\chess_AI\\models\\moved_from_weights.h5')
+move_to_model.load_weights('D:\\Documenten\\Universiteit Utrecht\\Period 2\\Pattern recognition\\Project\\play_chess\\chess_AI\\models\\moved_to_weights.h5')

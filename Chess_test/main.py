@@ -15,7 +15,6 @@ stockfish.set_skill_level(0) #this goes from 0 to 20
 chessBoard = chess.Board()
 stockfishMovesList = []
 
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -59,25 +58,16 @@ class Terminal(QRunnable):
 
     def runGame(self):
         while self.keepPlaying is True:
-            self.keepPlaying = self.UUAIPlays()
             self.count = self.count + 1
+            self.keepPlaying = self.UUAIPlays()
 
             if self.keepPlaying is True:
-                self.keepPlaying = self.StockfishPlays()
                 self.count = self.count + 1
+                self.keepPlaying = self.StockfishPlays()
+
 
     def UUAIPlays(self):
         # First we play(WHITE)
-        # legalMove = False
-        #
-        # while legalMove is False:
-        #     try:
-        #         playerInput = input()
-        #         chessBoard.parse_san(playerInput)
-        #         legalMove = True
-        #     except:
-        #         print("Illegal move try again")
-
         computer_color = 'w'
         if len(stockfishMovesList) == 0:
             move = 'None'
@@ -86,10 +76,13 @@ class Terminal(QRunnable):
             move = stockfishMovesList[len(stockfishMovesList) - 1]
             position = chessBoard.fen()
 
-        engine.Engine(move, position, computer_color)
-        moves = engine.Node(chessBoard)
-        best_move = moves.best_moves[0][0]
-        self.chessWindow.playMove(best_move, "UUAI")
+
+        best_move = engine.Engine(move, position, computer_color)
+        engine.Node(chessBoard)
+        move = best_move.build_output_data()
+        # boarde = engine.Node(chessBoard)
+        # move = boarde.best_moves[0][0]
+        self.chessWindow.playMove(move, "UUAI")
         return self.endOfGameCheck("WHITE")
 
     def StockfishPlays(self):
@@ -109,6 +102,10 @@ class Terminal(QRunnable):
             print("Move count", self.count)
             return False
         elif chessBoard.is_insufficient_material():
+            print("IT IS A STALEMATE")
+            print("Move count", self.count)
+            return False
+        elif chessBoard.is_game_over():
             print("IT IS A DRAW")
             print("Move count", self.count)
             return False
