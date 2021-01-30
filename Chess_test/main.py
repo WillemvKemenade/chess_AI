@@ -35,8 +35,8 @@ class MainWindow(QWidget):
             stockfishMovesList.append(str(inputText))
             chessBoard.push(chess.Move.from_uci(str(inputText)))
         else:
-            stockfishMovesList.append(inputText)
-            chessBoard.push(chess.Move.from_uci(inputText))
+            stockfishMovesList.append(str(chessBoard.parse_san(inputText)))
+            chessBoard.push_san(inputText)
 
         self.updateWindow()
 
@@ -63,7 +63,8 @@ class Terminal(QRunnable):
 
             if self.keepPlaying is True:
                 self.count = self.count + 1
-                self.keepPlaying = self.StockfishPlays()
+                self.keepPlaying = self.PlayerPlays()
+
 
 
     def UUAIPlays(self):
@@ -85,15 +86,26 @@ class Terminal(QRunnable):
         self.chessWindow.playMove(move, "UUAI")
         return self.endOfGameCheck("WHITE")
 
-    def StockfishPlays(self):
+    def PlayerPlays(self):
         # Then the bot plays(BLACK)
-        stockfish.set_position(stockfishMovesList)
-        bestMove = stockfish.get_best_move()
+        # stockfish.set_position(stockfishMovesList)
+        # bestMove = stockfish.get_best_move()
+        #
+        # while chess.Move.from_uci(bestMove) in chessBoard.legal_moves is False:
+        #     bestMove = stockfish.get_best_move()
+        #
+        # self.chessWindow.playMove(bestMove, "Stockfish")
+        legalMove = False
 
-        while chess.Move.from_uci(bestMove) in chessBoard.legal_moves is False:
-            bestMove = stockfish.get_best_move()
+        while legalMove is False:
+            try:
+                playerInput = input()
+                chessBoard.parse_san(playerInput)
+                legalMove = True
+            except:
+                print("Illegal move try again")
 
-        self.chessWindow.playMove(bestMove, "Stockfish")
+        self.chessWindow.playMove(playerInput, "Player")
         return self.endOfGameCheck("BLACK")
 
     def endOfGameCheck(self, player):
