@@ -12,7 +12,8 @@ import engine
 stockfish = Stockfish("stockfish_20090216_x64_bmi2.exe")
 stockfish.set_skill_level(0) #this goes from 0 to 20
 
-chessBoard = chess.Board()
+board_notation = 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4' #Place FEN board notation
+chessBoard = chess.Board(board_notation)
 stockfishMovesList = []
 
 class MainWindow(QWidget):
@@ -77,12 +78,14 @@ class Terminal(QRunnable):
             move = stockfishMovesList[len(stockfishMovesList) - 1]
             position = chessBoard.fen()
 
+        if board_notation != '':
+            position = board_notation
 
         best_move = engine.Engine(move, position, computer_color)
-        engine.Node(chessBoard)
-        move = best_move.build_output_data()
-        # boarde = engine.Node(chessBoard)
-        # move = boarde.best_moves[0][0]
+        # engine.Node(chessBoard)
+        # move = best_move.build_output_data()
+        boarde = engine.Node(chessBoard)
+        move = boarde.best_moves[0][0]
         self.chessWindow.playMove(move, "UUAI")
         return self.endOfGameCheck("WHITE")
 
