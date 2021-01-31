@@ -5,6 +5,10 @@ from sys import maxsize as infinity
 import chess
 import numpy as np
 from keras.models import model_from_json
+from montecarlo.node import Node
+from montecarlo.montecarlo import MonteCarlo
+import chess.engine
+# from tryMonteCarlo import move_finder, child_finder, node_evaluator
 
 
 class Engine():
@@ -53,24 +57,24 @@ class Engine():
             # self.check_for_promotion(*squares_to_numbers(move_recieved,
             #                                              mirror=False))
             self.move_recieved = chess.Move.from_uci(move_recieved)
-            # self.board.push(self.move_recieved)
+            self.board.push(self.move_recieved)
 
-    # def check_for_promotion(self, mv_frm, mv_to):
-    #     'Checks for client-side promotion'
-    #     white_queen = chess.Piece(piece_type=chess.QUEEN, color=chess.WHITE)
-    #     black_queen = chess.Piece(piece_type=chess.QUEEN, color=chess.BLACK)
-    #
-    #     if self.board.piece_at(mv_frm).piece_type == chess.PAWN:
-    #         if chess.square_rank(mv_to) == 7:
-    #             if self.board.piece_at(mv_frm).color == chess.WHITE:
-    #                 promoted_binary = bin(self.pieces['Q'])[2:].zfill(4)
-    #                 self.board.set_piece_at(square=mv_frm,
-    #                                         piece=white_queen)
-    #         elif chess.square_rank(mv_to) == 0:
-    #             if self.board.piece_at(mv_frm).color == chess.BLACK:
-    #                 promoted_binary = bin(self.pieces['q'])[2:].zfill(4)
-    #                 self.board.set_piece_at(square=mv_frm,
-    #                                         piece=black_queen)
+    def check_for_promotion(self, mv_frm, mv_to):
+        'Checks for client-side promotion'
+        white_queen = chess.Piece(piece_type=chess.QUEEN, color=chess.WHITE)
+        black_queen = chess.Piece(piece_type=chess.QUEEN, color=chess.BLACK)
+
+        if self.board.piece_at(mv_frm).piece_type == chess.PAWN:
+            if chess.square_rank(mv_to) == 7:
+                if self.board.piece_at(mv_frm).color == chess.WHITE:
+                    promoted_binary = bin(self.pieces['Q'])[2:].zfill(4)
+                    self.board.set_piece_at(square=mv_frm,
+                                            piece=white_queen)
+            elif chess.square_rank(mv_to) == 0:
+                if self.board.piece_at(mv_frm).color == chess.BLACK:
+                    promoted_binary = bin(self.pieces['q'])[2:].zfill(4)
+                    self.board.set_piece_at(square=mv_frm,
+                                            piece=black_queen)
 
     def build_binary_move(self):
         '''Javascript chess gui uses binary encoding to represent moves:
@@ -160,21 +164,30 @@ class Engine():
 
         return [best_advantage, favourite_child, predicted_child]
 
-    def build_output_data(self):
+    def child_finder(node, self):
+        for move in node.state.legal_moves:
+            child = Node(node.state.copy())
+            child.state.push(move)
+            node.add_child(child)
+            # child.policy_value = random.random()
+
+    def node_evaluator(node, self):
+        result = Node.get_best_moves(node)
+        return result
+
+    def build_output_data(self, board):
         '''Takes the result from minimax and returns a dict
         minimax uses depth 1 prior to 15 turns. After 15 turns,
         search depth increases to 3 to allow for checkmating.'''
         output_data = {}
-        if self.turns > 15:
-            sdepth = 3
-        else:
-            sdepth = 1
-
         if (self.last_turn != self.side or
                 self.first_move is True or self.move_recieved == 'None'):
-            result = self.minimax(Node(board=self.board),
-                                  depth=sdepth, player=self.side,
-                                  alpha=-1*infinity, beta=infinity)
+            montecarlo = MonteCarlo(Node(board))
+            montecarlo.child_finder = self.child_finder(Node(board))
+            montecarlo.node_evaluator = self.node_evaluator(Node(board))
+            montecarlo.simulate(1000)
+            chosen_child_node = montecarlo.make_choice()
+            result = chosen_child_node
             print('result:', result)
             self.uci_move = result[1]
             pick_from = str(self.uci_move)[0:2].upper()

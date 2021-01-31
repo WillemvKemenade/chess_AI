@@ -217,6 +217,14 @@ def parse_file(data_folder, text_file):
 
             one_hot_position = board.position_list_one_hot()
             position2 = board.position_list()
+
+            """Additional features"""
+            # white_castlingQ = int(board.has_queenside_castling_rights(chess.WHITE))
+            # white_castlingK = int(board.has_kingside_castling_rights(chess.WHITE))
+            # black_castlingQ = int(board.has_queenside_castling_rights(chess.BLACK))
+            # black_castlingK = int(board.has_kingside_castling_rights(chess.BLACK))
+            # one_hot_position.extend([white_castlingQ, white_castlingK, black_castlingQ, black_castlingK])
+
             train_input.append(one_hot_position)
             piece_from, piece_to = piece_moved(position1, position2)
             moved_from.append(piece_from)
